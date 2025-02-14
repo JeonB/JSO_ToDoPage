@@ -1,19 +1,16 @@
-import mongoose, { Schema, model, models } from 'mongoose'
+import mongoose, { Schema, model, models, Model } from 'mongoose'
+import { BoardType, TaskType } from './type'
 
 const TaskSchema = new Schema({
-  title: { type: String, required: true },
-  status: {
-    type: String,
-    enum: ['todo', 'in-progress', 'done'],
-    default: 'todo',
-  },
+  title: { type: String },
 })
 
 const BoardSchema = new Schema({
-  _id: mongoose.Types.ObjectId,
-  name: { type: String, required: true },
+  name: { type: String },
   tasks: [{ type: Schema.Types.ObjectId, ref: 'Task' }],
 })
 
-export const Task = models.Task || model('Task', TaskSchema)
-export const Board = models.Board || model('Board', BoardSchema)
+export const Task: Model<TaskType> =
+  models.Task || model<TaskType>('Task', TaskSchema)
+export const Board: Model<BoardType> =
+  models.Board || model<BoardType>('Board', BoardSchema)
