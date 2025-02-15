@@ -1,20 +1,43 @@
 'use client'
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react'
 import DetailsMenu from './DetailsMenu'
-import { deleteBoard, updateBoardName } from '@/app/lib/actions'
+import { createTask, deleteBoard, updateBoardName } from '@/app/lib/actions'
 import { BoardType } from '@/app/lib/type'
 import { useDebouncedCallback } from 'use-debounce'
 import TaskList from './TaskList'
+import clsx from 'clsx'
 
 export default function Board({ board }: { board: BoardType }) {
   const [name, setName] = useState(board.name)
+  const [isEditing, setIsEditing] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   const debouncedUpdate = useDebouncedCallback(async (newName: string) => {
-    setName(newName)
     if (newName.trim() !== board.name) {
       await updateBoardName({ id: board.id, name: newName })
     }
+    setIsEditing(false)
   }, 300)
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newName = e.target.value
+    setName(newName)
+    debouncedUpdate(newName)
+  }
+
+  const handleEdit = () => {
+    setIsEditing(true)
+    if (inputRef.current) {
+      inputRef.current.focus()
+    }
+  }
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLInputElement>) => {
+    if (!isEditing) {
+      e.preventDefault()
+    }
+  }
+
   return (
     <div>
       <div className="w-full flex-shrink-0 rounded-xl border border-neutral-700 bg-neutral-800 p-4 shadow-sm md:w-[300px] lg:w-[350px]">
@@ -23,24 +46,46 @@ export default function Board({ board }: { board: BoardType }) {
             <span className="material-symbols-outlined text-blue-400">
               format_list_bulleted
             </span>
-            <h2 className="font-semibold text-red-600">
-              <input
-                type="text"
-                value={name}
-                onChange={e => debouncedUpdate(e.target.value)}
-                placeholder="Enter new board title"
-              />
-            </h2>
+            <input
+              ref={inputRef}
+              className={clsx(
+                'w-full',
+                isEditing ? 'cursor-text' : 'cursor-pointer',
+                'bg-transparent',
+                'text-lg',
+                'font-semibold',
+                'text-white',
+                'focus:outline-none',
+                'md:text-xl',
+                'select-none',
+              )}
+              type="text"
+              value={name}
+              onChange={handleNameChange}
+              placeholder="Enter new board title"
+              readOnly={!isEditing}
+              onMouseDown={handleMouseDown}
+            />
           </div>
           <DetailsMenu
-            editLabel="Edit Board"
-            deleteLabel="Delete Board"
-            onEdit={() => deleteBoard(board.id)}
+            editLabel="보드 수정"
+            deleteLabel="보드 삭제"
+            onEdit={handleEdit}
             onDelete={() => deleteBoard(board.id)}
           />
+        </div>
+        <div className="space-y-5">
           {board.tasks && board.tasks.length !== 0 && (
             <TaskList tasks={board.tasks} />
           )}
+          <button
+            onClick={() => createTask(board.id)}
+            className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed border-neutral-700 px-3 py-2 text-neutral-400 transition-all duration-200 hover:scale-[1.02] hover:border-indigo-500 hover:text-indigo-400">
+            <span className="material-symbols-outlined animate-pulse">
+              add_circle
+            </span>
+            할일 추가
+          </button>
         </div>
       </div>
     </div>
