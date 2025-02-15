@@ -6,6 +6,7 @@ import { BoardType } from '@/app/lib/type'
 import { useDebouncedCallback } from 'use-debounce'
 import TaskList from './TaskList'
 import clsx from 'clsx'
+import { useSortable } from '@dnd-kit/sortable'
 
 export default function Board({ board }: { board: BoardType }) {
   const [name, setName] = useState(board.name)
@@ -14,7 +15,7 @@ export default function Board({ board }: { board: BoardType }) {
 
   const debouncedUpdate = useDebouncedCallback(async (newName: string) => {
     if (newName.trim() !== board.name) {
-      await updateBoardName({ id: board.id, name: newName })
+      await updateBoardName({ id: board.id, name: newName, order: board.order })
     }
     setIsEditing(false)
   }, 300)
@@ -37,9 +38,17 @@ export default function Board({ board }: { board: BoardType }) {
       e.preventDefault()
     }
   }
+  const { attributes, listeners, setNodeRef, transform, transition } =
+    useSortable({ id: board.id })
 
+  const style = transform
+    ? {
+        transform: `translate(${transform.x}px, ${transform.y}px)`,
+        transition,
+      }
+    : undefined
   return (
-    <div>
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
       <div className="w-full flex-shrink-0 rounded-xl border border-neutral-700 bg-neutral-800 p-4 shadow-sm md:w-[300px] lg:w-[350px]">
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -80,6 +89,7 @@ export default function Board({ board }: { board: BoardType }) {
           )}
           <button
             onClick={() => createTask(board.id)}
+            onPointerDown={e => e.stopPropagation()}
             className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed border-neutral-700 px-3 py-2 text-neutral-400 transition-all duration-200 hover:scale-[1.02] hover:border-indigo-500 hover:text-indigo-400">
             <span className="material-symbols-outlined animate-pulse">
               add_circle

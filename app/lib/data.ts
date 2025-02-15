@@ -9,6 +9,7 @@ export async function getTasks() {
     const convertedTasks: TaskType[] = tasks.map(task => ({
       id: task._id.toString(),
       title: task.title,
+      order: task.order,
     }))
     return convertedTasks
   } catch (error) {
@@ -24,10 +25,12 @@ export async function getBoards() {
     const convertedBoards: BoardType[] = boards.map(board => ({
       id: board._id.toString(),
       name: board.name,
+      order: board.order,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       tasks: board.tasks?.map((task: any) => ({
         id: task._id.toString(),
         title: task.title,
+        order: task.order,
       })),
     }))
     return convertedBoards

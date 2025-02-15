@@ -128,3 +128,23 @@ export async function deleteBoard(id: string) {
   }
   revalidatePath('/')
 }
+
+export async function updateBoardOrder(boardId: string, newOrder: number) {
+  try {
+    await connectDB()
+    await Board.findByIdAndUpdate(boardId, { order: newOrder })
+  } catch (error) {
+    console.error('Error updating board order:', error)
+    throw new Error('Failed to update board order')
+  }
+}
+
+export async function updateTaskOrder(taskId: string, newOrder: number) {
+  try {
+    await connectDB()
+    await Task.findByIdAndUpdate(taskId, { order: newOrder })
+  } catch (error) {
+    console.error('Error updating task order:', error)
+    throw new Error('Failed to update task order')
+  }
+}
