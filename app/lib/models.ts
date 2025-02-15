@@ -1,4 +1,4 @@
-import mongoose, { Schema, model, models, Model } from 'mongoose'
+import { Schema, model, models, Model } from 'mongoose'
 import { BoardType, TaskType } from './type'
 
 const TaskSchema = new Schema({

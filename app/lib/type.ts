@@ -1,5 +1,3 @@
-import mongoose from 'mongoose'
-
 export interface BoardType {
   id: string
   name: string

@@ -24,6 +24,7 @@ export async function getBoards() {
     const convertedBoards: BoardType[] = boards.map(board => ({
       id: board._id.toString(),
       name: board.name,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       tasks: board.tasks?.map((task: any) => ({
         id: task._id.toString(),
         title: task.title,

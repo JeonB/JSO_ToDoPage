@@ -23,7 +23,7 @@ const Header: React.FC = () => {
           <span className="material-symbols-outlined animate-pulse">
             add_circle
           </span>
-          New Board
+          새 페이지
         </button>
       </div>
     </header>
