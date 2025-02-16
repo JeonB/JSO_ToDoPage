@@ -1,13 +1,14 @@
 export interface BoardType {
   id: string
-  name: string
-  tasks?: TaskType[]
+  title?: string
   order: number
+  tasks?: TaskType[]
+  children?: React.ReactNode
 }
 
 export interface TaskType {
   id: string
-  title: string
+  title?: string
   order: number
 }
 

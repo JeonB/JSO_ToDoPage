@@ -6,14 +6,6 @@ import { Task, Board } from './models'
 import { TaskType, BoardType } from './type'
 import { revalidatePath } from 'next/cache'
 
-const TaskSchema = z.object({
-  title: z.string().min(1, 'Title is required'),
-})
-
-const BoardSchema = z.object({
-  name: z.string().min(1, 'Name is required'),
-})
-
 export async function createTask(boardId: string) {
   const data = { title: '' }
 
@@ -34,8 +26,6 @@ export async function createTask(boardId: string) {
 }
 
 export async function updateTaskTitle(data: TaskType) {
-  const parsedData = TaskSchema.safeParse(data)
-  if (!parsedData.success) return { error: parsedData.error.errors }
   try {
     await connectDB()
     const updatedTask = await Task.findByIdAndUpdate(
@@ -69,7 +59,7 @@ export async function deleteTask(id: string) {
 }
 
 export async function createBoard() {
-  const data = { name: '' }
+  const data = { title: '' }
   try {
     await connectDB()
     const newBoard = new Board(data)
@@ -81,15 +71,12 @@ export async function createBoard() {
   revalidatePath('/')
 }
 
-export async function updateBoardName(data: BoardType) {
-  const parsedData = BoardSchema.safeParse(data)
-  if (!parsedData.success) return { error: parsedData.error.errors }
-
+export async function updateBoardTitle(data: BoardType) {
   try {
     await connectDB()
     const updatedBoard = await Board.findByIdAndUpdate(
       data.id,
-      { name: data.name },
+      { title: data.title },
       {
         new: true,
       },
@@ -146,5 +133,29 @@ export async function updateTaskOrder(taskId: string, newOrder: number) {
   } catch (error) {
     console.error('Error updating task order:', error)
     throw new Error('Failed to update task order')
+  }
+}
+
+export async function updateTaskBoard(
+  taskId: string,
+  fromBoardId: string,
+  toBoardId: string,
+) {
+  try {
+    await connectDB()
+
+    // 테스크를 기존 보드에서 제거
+    await Board.findByIdAndUpdate(fromBoardId, {
+      $pull: { tasks: taskId },
+    })
+
+    // 테스크를 새로운 보드에 추가
+    await Task.findByIdAndUpdate(taskId, { boardId: toBoardId })
+    await Board.findByIdAndUpdate(toBoardId, {
+      $push: { tasks: taskId },
+    })
+  } catch (error) {
+    console.error('Error updating task board:', error)
+    throw new Error('Failed to update task board')
   }
 }

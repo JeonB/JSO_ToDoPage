@@ -7,7 +7,7 @@ const TaskSchema = new Schema({
 })
 
 const BoardSchema = new Schema({
-  name: { type: String },
+  title: { type: String },
   tasks: [{ type: Schema.Types.ObjectId, ref: 'Task' }],
   order: { type: Number, default: 0 },
 })

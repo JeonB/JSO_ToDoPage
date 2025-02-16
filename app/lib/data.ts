@@ -24,7 +24,7 @@ export async function getBoards() {
     const boards = await Board.find().populate('tasks').lean()
     const convertedBoards: BoardType[] = boards.map(board => ({
       id: board._id.toString(),
-      name: board.name,
+      title: board.title,
       order: board.order,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       tasks: board.tasks?.map((task: any) => ({
