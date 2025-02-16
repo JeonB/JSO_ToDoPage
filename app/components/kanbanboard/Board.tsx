@@ -1,5 +1,5 @@
 'use client'
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import DetailsMenu from './DetailsMenu'
 import { deleteBoard, updateBoardTitle } from '@/app/lib/actions'
 import { BoardType } from '@/app/lib/type'
@@ -20,13 +20,11 @@ export default function Board({ id, title, order, children }: BoardType) {
         order: order,
       })
     }
-    setIsEditing(false)
   }, 800)
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newName = e.target.value
     setBoardTitle(newName)
-    console.log(newName)
     debouncedUpdate(newName)
   }
 
@@ -35,6 +33,10 @@ export default function Board({ id, title, order, children }: BoardType) {
     if (inputRef.current) {
       inputRef.current.focus()
     }
+  }
+
+  const handleBlur = () => {
+    setIsEditing(false)
   }
 
   const handleMouseDown = (e: React.MouseEvent<HTMLInputElement>) => {
@@ -80,6 +82,7 @@ export default function Board({ id, title, order, children }: BoardType) {
               placeholder="Enter new board title"
               readOnly={!isEditing}
               onMouseDown={handleMouseDown}
+              onBlur={handleBlur}
             />
           </div>
           <DetailsMenu

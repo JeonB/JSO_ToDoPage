@@ -103,7 +103,7 @@ export async function deleteBoard(id: string) {
     }
 
     const taskIds = board.tasks?.map((task: TaskType) => task.id)
-    await Task.deleteMany({ id: { $in: taskIds } })
+    await Task.deleteMany({ _id: { $in: taskIds } })
 
     const deletedBoard = await Board.findByIdAndDelete(id)
     if (!deletedBoard) {
