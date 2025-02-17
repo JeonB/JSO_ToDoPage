@@ -12,6 +12,7 @@ https://jso-to-do-page.vercel.app/
 
 - **Next.js 15** - 최신 App Router 기반으로 개발
 - **TypeScript** - 안정적인 타입 검사
+- **Zod** - 데이터 스키마, 유효성 검사
 - **TailwindCSS** - 유틸리티 기반 스타일링
 - **dnd-kit** - Drag & Drop 기능 구현
 
@@ -32,3 +33,51 @@ https://jso-to-do-page.vercel.app/
 - ✔ Dark Mode 지원 (LocalStorage 유지)
 - ✔ MongoDB 기반 실시간 데이터 업데이트
 - ✔ 서버리스 API 활용 (Vercel Functions)
+
+## 📂 프로젝트 구조
+
+📦 kanban-board
+┣ 📂 app
+┃ ┣ 📂 lib
+┃ ┃ ┣ 📜 actions.ts # 데이터 처리 API
+┃ ┃ ┣ 📜 data.ts # 데이터 호출 API
+┃ ┃ ┣ 📜 models.ts # MongoDB 데이터 스키마
+┃ ┃ ┣ 📜 mongodb.ts # MongoDB 연결 설정
+┃ ┃ ┣ 📜 type.ts # 타입 설정
+┃ ┣ 📂 components
+┃ ┃ ┣ 📂 kanbanboard
+┃ ┃ ┃ ┣ 📜 Board.tsx # Kanban Board UI
+┃ ┃ ┃ ┣ 📜 Task.tsx # 개별 Task 컴포넌트
+┃ ┃ ┃ ┣ 📜 BoardList.tsx # Board 리스트 관리
+┃ ┃ ┃ ┗ 📜 DetailsMenu.tsx # 세부 메뉴 UI
+┃ ┃ ┣ 📂 layout
+┃ ┃ ┃ ┗ 📜 Header.tsx # 헤더 UI
+┃ ┃ ┗ 📂 ui
+┃ ┃ ┣ 📜 AddBoardButton.tsx # Task 컴포넌트 추가버튼
+┃ ┃ ┗ 📜 AddTaskButton.tsx # Board 컴포넌트 추가버튼
+┃ ┣ 📜 page.tsx # 메인 페이지
+┃ ┣ 📜 layout.tsx # 전체 레이아웃
+┃ ┗ 📜 globals.css # 글로벌 스타일링
+┣ 📜 next.config.ts # Next.js 설정
+┣ 📜 tsconfig.json # TypeScript 설정
+┣ 📜 tailwind.config.json # Tailwindcss 설정
+┗ 📜 README.md # 프로젝트 소개 파일
+
+## 🚀 실행 방법
+
+### 1️⃣ 프로젝트 클론
+
+    #클론
+    git clone https://github.com/JeonB/JSO_ToDoPage.git
+
+### 2️⃣ 환경 변수 설정
+
+    #.env.local
+    MONGODB_URI=your_mongodb_connection_string
+
+### 3️⃣ 패키지 설치 및 실행
+
+    #설치
+    npm install 또는 pnpm install
+    #설치
+    npm run dev 또는 pnpm dev
