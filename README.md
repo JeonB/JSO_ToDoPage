@@ -39,25 +39,25 @@ https://jso-to-do-page.vercel.app/
 📦 kanban-board
 ┣ 📂 app
 ┃ ┣ 📂 lib
-┃ ┃ ┣ 📜 actions.ts # 데이터 처리 API
-┃ ┃ ┣ 📜 data.ts # 데이터 호출 API
-┃ ┃ ┣ 📜 models.ts # MongoDB 데이터 스키마
-┃ ┃ ┣ 📜 mongodb.ts # MongoDB 연결 설정
-┃ ┃ ┣ 📜 type.ts # 타입 설정
+┃ ┃ ┣ 📜 actions.ts                  # 데이터 처리 API
+┃ ┃ ┣ 📜 data.ts                     # 데이터 호출 API
+┃ ┃ ┣ 📜 models.ts                   # MongoDB 데이터 스키마
+┃ ┃ ┣ 📜 mongodb.ts                  # MongoDB 연결 설정
+┃ ┃ ┣ 📜 type.ts                     # 타입 설정
 ┃ ┣ 📂 components
 ┃ ┃ ┣ 📂 kanbanboard
-┃ ┃ ┃ ┣ 📜 Board.tsx # Kanban Board UI
-┃ ┃ ┃ ┣ 📜 Task.tsx # 개별 Task 컴포넌트
-┃ ┃ ┃ ┣ 📜 BoardList.tsx # Board 리스트 관리
-┃ ┃ ┃ ┗ 📜 DetailsMenu.tsx # 세부 메뉴 UI
+┃ ┃ ┃ ┣ 📜 Board.tsx                 # Kanban Board UI
+┃ ┃ ┃ ┣ 📜 Task.tsx                  # 개별 Task 컴포넌트
+┃ ┃ ┃ ┣ 📜 BoardList.tsx             # Board 리스트 관리
+┃ ┃ ┃ ┗ 📜 DetailsMenu.tsx           # 세부 메뉴 UI
 ┃ ┃ ┣ 📂 layout
-┃ ┃ ┃ ┗ 📜 Header.tsx # 헤더 UI
+┃ ┃ ┃ ┗ 📜 Header.tsx                # 헤더 UI
 ┃ ┃ ┗ 📂 ui
-┃ ┃ ┣ 📜 AddBoardButton.tsx # Task 컴포넌트 추가버튼
-┃ ┃ ┗ 📜 AddTaskButton.tsx # Board 컴포넌트 추가버튼
-┃ ┣ 📜 page.tsx # 메인 페이지
-┃ ┣ 📜 layout.tsx # 전체 레이아웃
-┃ ┗ 📜 globals.css # 글로벌 스타일링
+┃ ┃ ┣ 📜 AddBoardButton.tsx          # Task 컴포넌트 추가버튼
+┃ ┃ ┗ 📜 AddTaskButton.tsx           # Board 컴포넌트 추가버튼
+┃ ┣ 📜 page.tsx                      # 메인 페이지
+┃ ┣ 📜 layout.tsx                    # 전체 레이아웃
+┃ ┗ 📜 globals.css                   # 글로벌 스타일링
 ```
 ## 🚀 실행 방법
 
