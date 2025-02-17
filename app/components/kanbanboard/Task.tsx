@@ -4,7 +4,6 @@ import { useDebouncedCallback } from 'use-debounce'
 import { updateTaskTitle, deleteTask } from '@/app/lib/actions'
 import clsx from 'clsx'
 import { useSortable } from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
 
 export default function Task({
   task,
@@ -118,10 +117,12 @@ export default function Task({
     isDragging,
   } = useSortable({ id: task.id })
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  }
+  const style = transform
+    ? {
+        transform: `translate(${transform.x}px, ${transform.y}px)`,
+        transition,
+      }
+    : undefined
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
