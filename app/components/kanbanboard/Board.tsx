@@ -7,9 +7,9 @@ import { useDebouncedCallback } from 'use-debounce'
 import clsx from 'clsx'
 import { useSortable } from '@dnd-kit/sortable'
 
-export default function Board({ id, title, order, children }: BoardType) {
+function Board({ id, title, order, children, autoFocus }: BoardType) {
   const [boardTitle, setBoardTitle] = useState(title || '')
-  const [isEditing, setIsEditing] = useState(false)
+  const [isEditing, setIsEditing] = useState(autoFocus)
   const inputRef = useRef<HTMLInputElement>(null)
 
   const debouncedUpdate = useDebouncedCallback(async (updatedTitle: string) => {
@@ -20,7 +20,13 @@ export default function Board({ id, title, order, children }: BoardType) {
         order: order,
       })
     }
-  }, 800)
+  }, 500)
+
+  useEffect(() => {
+    if (isEditing && inputRef.current) {
+      inputRef.current.focus()
+    }
+  }, [isEditing])
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newName = e.target.value
@@ -45,8 +51,14 @@ export default function Board({ id, title, order, children }: BoardType) {
     }
   }
 
-  const { attributes, listeners, setNodeRef, transform, transition } =
-    useSortable({ id: id })
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: id })
 
   const style = transform
     ? {
@@ -56,8 +68,13 @@ export default function Board({ id, title, order, children }: BoardType) {
     : undefined
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <div className="w-full flex-shrink-0 rounded-xl border border-neutral-700 bg-neutral-800 p-4 shadow-sm md:w-[300px] lg:w-[350px]">
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      className={clsx(isDragging && 'opacity-50')}>
+      <div className="w-full flex-shrink-0 rounded-xl border bg-neutral-100 p-4 text-black shadow-sm md:w-[300px] lg:w-[350px] dark:border-neutral-700 dark:bg-neutral-800 dark:text-white">
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="material-symbols-outlined text-blue-400">
@@ -71,7 +88,8 @@ export default function Board({ id, title, order, children }: BoardType) {
                 'bg-transparent',
                 'text-lg',
                 'font-semibold',
-                'text-white',
+                'dark:text-white',
+                'text-black',
                 'focus:outline-none',
                 'md:text-xl',
                 'select-none',
@@ -79,7 +97,7 @@ export default function Board({ id, title, order, children }: BoardType) {
               type="text"
               value={boardTitle}
               onChange={handleNameChange}
-              placeholder="Enter new board title"
+              placeholder="보드 제목 입력"
               readOnly={!isEditing}
               onMouseDown={handleMouseDown}
               onBlur={handleBlur}
@@ -97,3 +115,4 @@ export default function Board({ id, title, order, children }: BoardType) {
     </div>
   )
 }
+export default React.memo(Board)

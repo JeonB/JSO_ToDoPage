@@ -1,50 +1,76 @@
 'use client'
-import { BoardType } from '@/app/lib/type'
+import { useState, useEffect, useRef } from 'react'
+import { BoardType, TaskType } from '@/app/lib/type'
 import {
-  createBoard,
   updateBoardOrder,
   updateTaskBoard,
   updateTaskOrder,
 } from '@/app/lib/actions'
 import {
-  closestCenter,
+  closestCorners,
   DndContext,
   DragEndEvent,
-  DragOverEvent,
-  KeyboardSensor,
+  DragStartEvent,
   PointerSensor,
   useSensor,
   useSensors,
+  DragOverlay,
+  DragOverEvent,
 } from '@dnd-kit/core'
 import {
   arrayMove,
   horizontalListSortingStrategy,
   verticalListSortingStrategy,
   SortableContext,
-  sortableKeyboardCoordinates,
 } from '@dnd-kit/sortable'
-import { useEffect } from 'react'
 import Board from './Board'
 import Task from './Task'
-import { useTaskStore } from '@/app/lib/store'
 import AddBoardButton from '../ui/AddBoardButton'
 import AddTaskButton from '../ui/AddTaskButton'
 
 export default function BoardList({ boards }: { boards: BoardType[] }) {
-  const { boards: boardList, setBoards, onTaskMove } = useTaskStore()
+  const [boardList, setBoardList] = useState<BoardType[]>([])
+  const [draggingTask, setDraggingTask] = useState<TaskType | null>(null)
+  const [newTaskId, setNewTaskId] = useState<string | null>(null)
+  const [newBoardId, setNewBoardId] = useState<string | null>(null)
 
   useEffect(() => {
-    setBoards(boards)
-  }, [boards, setBoards])
+    setBoardList(prevBoards => {
+      if (JSON.stringify(prevBoards) === JSON.stringify(boards)) {
+        return prevBoards
+      }
+      return boards
+    })
+  }, [boards])
+  const sensors = useSensors(useSensor(PointerSensor))
+  const boardListRef = useRef(boardList)
+  useEffect(() => {
+    boardListRef.current = boardList
+  }, [boardList])
+
+  const handleDragStart = (event: DragStartEvent) => {
+    const { active } = event
+    const activeId = String(active.id)
+
+    // DragOverlay에서 보여줄 Task 찾기
+    const task = boardList
+      .flatMap(board => board.tasks || [])
+      .find(task => task.id === activeId)
+    if (task) {
+      setDraggingTask(task)
+    }
+  }
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event
-    if (!over || active.id === over.id) return
+    if (!over || active.id === over.id) {
+      setDraggingTask(null)
+      return
+    }
 
     const activeId = String(active.id)
     const overId = String(over.id)
 
-    // Board 이동 처리
     const activeBoardIndex = boardList.findIndex(board => board.id === activeId)
     const overBoardIndex = boardList.findIndex(board => board.id === overId)
 
@@ -54,9 +80,8 @@ export default function BoardList({ boards }: { boards: BoardType[] }) {
         activeBoardIndex,
         overBoardIndex,
       )
-      setBoards(updatedBoards)
+      setBoardList(updatedBoards)
 
-      // 서버에 보드 순서 반영
       await Promise.all(
         updatedBoards.map((board, index) => updateBoardOrder(board.id, index)),
       )
@@ -64,109 +89,250 @@ export default function BoardList({ boards }: { boards: BoardType[] }) {
       return
     }
 
-    // Task 이동 처리
-    const fromBoard = boardList.find(
-      board => board.tasks?.some(task => task.id === activeId),
-      console.log('activeId:', activeId),
+    const fromBoard = boardList.find(board =>
+      board.tasks?.some(task => task.id === activeId),
     )
     if (!fromBoard) return
 
-    const toBoard =
-      boardList.find(board => board.tasks?.some(task => task.id === overId)) ||
-      boardList.find(board => board.id === overId)
-
+    let toBoard = boardList.find(board => board.id === overId)
+    if (!toBoard) {
+      const overTask = boardList
+        .flatMap(board => board.tasks || [])
+        .find(task => task.id === overId)
+      if (overTask) {
+        toBoard = boardList.find(board =>
+          board.tasks?.some(task => task.id === overTask.id),
+        )
+      }
+    }
     if (!toBoard) return
 
-    // 같은 보드 내 이동
     if (fromBoard.id === toBoard.id) {
-      if (!fromBoard.tasks) return
-      const taskIndex = fromBoard.tasks.findIndex(task => task.id === activeId)
-      const newTaskIndex = fromBoard.tasks.findIndex(task => task.id === overId)
+      const taskIndex = fromBoard.tasks?.findIndex(task => task.id === activeId)
+      const newTaskIndex = fromBoard.tasks?.findIndex(
+        task => task.id === overId,
+      )
 
-      if (taskIndex !== -1 && newTaskIndex !== -1) {
-        const newTasks = arrayMove(fromBoard.tasks, taskIndex, newTaskIndex)
+      if (
+        taskIndex !== undefined &&
+        newTaskIndex !== undefined &&
+        taskIndex !== -1 &&
+        newTaskIndex !== -1
+      ) {
+        const newTasks = arrayMove(
+          fromBoard.tasks || [],
+          taskIndex,
+          newTaskIndex,
+        )
         const updatedBoards = boardList.map(board =>
           board.id === fromBoard.id ? { ...board, tasks: newTasks } : board,
         )
-        setBoards(updatedBoards)
+        setBoardList(updatedBoards)
 
-        // 서버에 태스크 순서 반영
         await Promise.all(
           newTasks.map((task, index) => updateTaskOrder(task.id, index)),
         )
       }
+      setDraggingTask(null)
+      return
     }
-    // 다른 보드로 이동
-    else {
-      const taskToMove = fromBoard.tasks?.find(task => task.id === activeId)
-      if (!taskToMove) return
 
-      const updatedFromBoard = {
-        ...fromBoard,
-        tasks: fromBoard.tasks?.filter(task => task.id !== activeId) || [],
-      }
+    const taskToMove = fromBoard.tasks?.find(task => task.id === activeId)
+    if (!taskToMove) {
+      console.error(`이동할 Task 찾을 수 없음 | activeId: ${activeId}`)
+      return
+    }
 
-      const updatedToBoard = {
-        ...toBoard,
-        tasks: [...(toBoard.tasks || []), taskToMove],
-      }
+    const updatedFromBoard = {
+      ...fromBoard,
+      tasks: fromBoard.tasks?.filter(task => task.id !== activeId) || [],
+    }
 
-      const updatedBoards = boardList.map(board =>
-        board.id === updatedFromBoard.id
-          ? updatedFromBoard
-          : board.id === updatedToBoard.id
-            ? updatedToBoard
-            : board,
-      )
+    const targetIndex =
+      toBoard.tasks?.findIndex(task => task.id === overId) ??
+      toBoard.tasks?.length
 
-      setBoards(updatedBoards)
+    const updatedToBoard = {
+      ...toBoard,
+      tasks: [
+        ...(toBoard.tasks ? toBoard.tasks.slice(0, targetIndex) : []),
+        { ...taskToMove },
+        ...(toBoard.tasks ? toBoard.tasks.slice(targetIndex) : []),
+      ],
+    }
 
-      // 서버에 보드 변경 및 태스크 순서 반영
+    const updatedBoards = boardList.map(board =>
+      board.id === updatedFromBoard.id
+        ? updatedFromBoard
+        : board.id === updatedToBoard.id
+          ? updatedToBoard
+          : board,
+    )
+
+    setBoardList(updatedBoards)
+
+    try {
       await updateTaskBoard(activeId, String(fromBoard.id), String(toBoard.id))
+
       await Promise.all(
         updatedToBoard.tasks.map((task, index) =>
           updateTaskOrder(task.id, index),
         ),
       )
+    } catch (error) {
+      console.error('updateTaskBoard failed:', error)
+      setBoardList(boardList)
+    }
+
+    setDraggingTask(null)
+  }
+
+  const handleDragOver = async (event: DragOverEvent) => {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+
+    const activeId = String(active.id)
+    const overId = String(over.id)
+
+    const fromBoard = boardListRef.current.find(board =>
+      board.tasks?.some(task => task.id === activeId),
+    )
+    if (!fromBoard) return
+
+    let toBoard = boardListRef.current.find(board => board.id === overId)
+    if (!toBoard) {
+      const overTask = boardListRef.current
+        .flatMap(board => board.tasks || [])
+        .find(task => task.id === overId)
+
+      toBoard = boardListRef.current.find(board =>
+        board.tasks?.some(task => task.id === overTask?.id),
+      )
+    }
+
+    if (!toBoard || fromBoard.id === toBoard.id) return
+
+    const taskToMove = fromBoard.tasks?.find(task => task.id === activeId)
+    if (!taskToMove) return
+
+    const targetIndex =
+      toBoard.tasks?.findIndex(task => task.id === overId) ??
+      toBoard.tasks?.length
+
+    const updatedBoards = boardListRef.current.map(board => {
+      if (board.id === fromBoard.id) {
+        return {
+          ...board,
+          tasks: board.tasks?.filter(task => task.id !== activeId),
+        }
+      }
+      if (board.id === toBoard.id) {
+        const updatedTasks = [
+          ...(toBoard.tasks ? toBoard.tasks.slice(0, targetIndex) : []),
+          { ...taskToMove },
+          ...(toBoard.tasks ? toBoard.tasks.slice(targetIndex) : []),
+        ]
+        return {
+          ...board,
+          tasks: updatedTasks,
+        }
+      }
+      return board
+    })
+
+    if (
+      JSON.stringify(updatedBoards) !== JSON.stringify(boardListRef.current)
+    ) {
+      setBoardList(updatedBoards)
+    }
+
+    try {
+      await updateTaskBoard(activeId, String(fromBoard.id), String(toBoard.id))
+
+      const updatedToBoard = updatedBoards.find(
+        board => board.id === toBoard.id,
+      )
+      if (updatedToBoard) {
+        if (updatedToBoard.tasks) {
+          await Promise.all(
+            updatedToBoard.tasks.map((task, index) =>
+              updateTaskOrder(task.id, index),
+            ),
+          )
+        }
+      }
+    } catch (error) {
+      console.error('updateTaskBoard failed:', error)
+      setBoardList(boardListRef.current)
     }
   }
 
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    }),
-  )
+  const handleTaskChange = (taskId: string, newTitle: string) => {
+    setBoardList(prevBoards =>
+      prevBoards.map(board => ({
+        ...board,
+        tasks: board.tasks?.map(task =>
+          task.id === taskId ? { ...task, title: newTitle } : task,
+        ),
+      })),
+    )
+  }
+
+  const handleTaskCreated = (taskId: string) => {
+    setNewTaskId(taskId)
+  }
+
+  const handleBoardCreated = (boardId: string) => {
+    setNewBoardId(boardId)
+  }
 
   return (
     <DndContext
       sensors={sensors}
-      collisionDetection={closestCenter}
+      onDragOver={handleDragOver}
+      collisionDetection={closestCorners}
+      onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}>
       <SortableContext
-        items={boardList.map(board => board.id)}
-        strategy={horizontalListSortingStrategy}>
+        strategy={horizontalListSortingStrategy}
+        items={boardList.map(board => board.id)}>
         <div className="flex flex-col gap-4 pb-4 md:flex-row md:gap-6 md:overflow-x-auto">
           {boardList.map(board => (
             <Board
               key={board.id}
               id={board.id}
               title={board.title}
-              order={board.order}>
+              order={board.order}
+              autoFocus={board.id === newBoardId}>
               <SortableContext
-                items={board.tasks?.map(task => task.id) || []}
+                items={(board.tasks || []).map(task => task.id)}
                 strategy={verticalListSortingStrategy}>
                 <div className="group space-y-3 rounded-lg bg-transparent p-3">
-                  {board.tasks?.map(task => <Task key={task.id} task={task} />)}
+                  {(board.tasks || []).map(task => (
+                    <Task
+                      key={task.id}
+                      task={task}
+                      autoFocus={task.id === newTaskId}
+                      onChange={handleTaskChange}
+                    />
+                  ))}
                 </div>
-                <AddTaskButton id={board.id} />
+                <AddTaskButton
+                  id={board.id}
+                  onTaskCreated={handleTaskCreated}
+                />
               </SortableContext>
             </Board>
           ))}
-
-          <AddBoardButton />
+          <AddBoardButton onBoardCreated={handleBoardCreated} />
         </div>
       </SortableContext>
+
+      <DragOverlay>
+        {draggingTask && (
+          <Task task={draggingTask} onChange={handleTaskChange} />
+        )}
+      </DragOverlay>
     </DndContext>
   )
 }

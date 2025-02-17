@@ -12,7 +12,7 @@ export default async function MyKanbanBoard() {
   })
   return (
     <div className="select-none">
-      <div className="min-h-[600px] w-full rounded-xl bg-slate-100 p-4 shadow-lg transition-colors duration-300 md:p-6 dark:bg-neutral-900">
+      <div className="min-h-[600px] w-full rounded-xl bg-gray-300 p-4 shadow-lg transition-colors duration-300 md:p-6 dark:bg-neutral-900">
         <Header />
         <BoardList boards={boards} />
       </div>
