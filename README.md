@@ -35,7 +35,7 @@ https://jso-to-do-page.vercel.app/
 - ✔ 서버리스 API 활용 (Vercel Functions)
 
 ## 📂 프로젝트 구조
-
+```
 📦 kanban-board
 ┣ 📂 app
 ┃ ┣ 📂 lib
@@ -62,7 +62,7 @@ https://jso-to-do-page.vercel.app/
 ┣ 📜 tsconfig.json # TypeScript 설정
 ┣ 📜 tailwind.config.json # Tailwindcss 설정
 ┗ 📜 README.md # 프로젝트 소개 파일
-
+```
 ## 🚀 실행 방법
 
 ### 1️⃣ 프로젝트 클론
