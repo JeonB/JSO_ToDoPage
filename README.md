@@ -58,10 +58,6 @@ https://jso-to-do-page.vercel.app/
 ┃ ┣ 📜 page.tsx # 메인 페이지
 ┃ ┣ 📜 layout.tsx # 전체 레이아웃
 ┃ ┗ 📜 globals.css # 글로벌 스타일링
-┣ 📜 next.config.ts # Next.js 설정
-┣ 📜 tsconfig.json # TypeScript 설정
-┣ 📜 tailwind.config.json # Tailwindcss 설정
-┗ 📜 README.md # 프로젝트 소개 파일
 ```
 ## 🚀 실행 방법
 
