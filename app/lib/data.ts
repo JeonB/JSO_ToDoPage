@@ -1,4 +1,4 @@
-import { connectDB } from './mongodb'
+import connectDB from './mongodb'
 import { Task, Board } from './models'
 import { TaskType, BoardType } from './type'
 

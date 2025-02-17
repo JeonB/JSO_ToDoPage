@@ -1,7 +1,7 @@
 'use server'
 
 import { z } from 'zod'
-import { connectDB } from './mongodb'
+import connectDB from './mongodb'
 import { Task, Board } from './models'
 import { TaskType, BoardType } from './type'
 import { revalidatePath } from 'next/cache'
