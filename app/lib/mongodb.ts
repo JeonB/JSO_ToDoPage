@@ -2,15 +2,17 @@
 /* eslint-disable no-var */
 import mongoose from 'mongoose'
 
-const MONGODB_URI = process.env.MONGODB_URI!
+let MONGODB_URI = ''
+MONGODB_URI =
+  process.env.NODE_ENV !== 'production'
+    ? process.env.MONGODB_URI_LOCAL!
+    : process.env.MONGODB_URI!
 
 if (!MONGODB_URI) {
   throw new Error('MONGODB_URI is not defined')
 }
 
 const options = {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
   connectTimeoutMS: 30000,
   socketTimeoutMS: 45000,
   maxPoolSize: 10,

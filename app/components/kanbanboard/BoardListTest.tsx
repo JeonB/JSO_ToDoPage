@@ -27,8 +27,9 @@ import Board from './Board'
 import Task from './Task'
 import AddBoardButton from '../ui/AddBoardButton'
 import AddTaskButton from '../ui/AddTaskButton'
+import TaskContainer from './TaskContainer'
 
-export default function BoardList({ boards }: { boards: BoardType[] }) {
+export default function BoardListTest({ boards }: { boards: BoardType[] }) {
   const [boardList, setBoardList] = useState<BoardType[]>([])
   const [draggingTask, setDraggingTask] = useState<TaskType | null>(null)
   const [newTaskId, setNewTaskId] = useState<string | null>(null)
@@ -309,12 +310,13 @@ export default function BoardList({ boards }: { boards: BoardType[] }) {
                 strategy={verticalListSortingStrategy}>
                 <div className="group space-y-3 rounded-lg bg-transparent p-3">
                   {(board.tasks || []).map(task => (
-                    <Task
-                      key={task.id}
-                      task={task}
-                      autoFocus={task.id === newTaskId}
-                      onChange={handleTaskChange}
-                    />
+                    <TaskContainer key={task.id} id={task.id}>
+                      <Task
+                        task={task}
+                        autoFocus={task.id === newTaskId}
+                        onChange={handleTaskChange}
+                      />
+                    </TaskContainer>
                   ))}
                 </div>
                 <AddTaskButton
@@ -330,7 +332,9 @@ export default function BoardList({ boards }: { boards: BoardType[] }) {
 
       <DragOverlay>
         {draggingTask && (
-          <Task task={draggingTask} onChange={handleTaskChange} />
+          <TaskContainer id={draggingTask.id}>
+            <Task task={draggingTask} onChange={handleTaskChange} />
+          </TaskContainer>
         )}
       </DragOverlay>
     </DndContext>

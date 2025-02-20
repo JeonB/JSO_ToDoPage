@@ -3,9 +3,8 @@ import { TaskType } from '@/app/lib/type'
 import { useDebouncedCallback } from 'use-debounce'
 import { updateTaskTitle, deleteTask } from '@/app/lib/actions'
 import clsx from 'clsx'
-import { useSortable } from '@dnd-kit/sortable'
 
-const Task = memo(function Task({
+const TaskTest = memo(function Task({
   task,
   onChange,
   autoFocus = false,
@@ -97,67 +96,46 @@ const Task = memo(function Task({
     }
   }
 
-  // 🔥 DnD 관련 속성
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: task.id })
-
-  const style = transform
-    ? { transform: `translate(${transform.x}px, ${transform.y}px)`, transition }
-    : undefined
-
   return (
     <div
-      ref={setNodeRef}
-      style={style}
-      {...attributes}
-      {...listeners}
-      className={clsx(isDragging && 'opacity-50')}>
+      className="relative flex items-start"
+      onMouseOver={handleMouseOver}
+      onMouseLeave={handleMouseLeave}>
+      <textarea
+        ref={inputRef}
+        defaultValue={task.title} // 🔥 useState 제거하고 직접 props 사용
+        onChange={e => handleInputChange(e.target.value)}
+        onKeyDown={handleKeyDown}
+        onInput={adjustTextareaHeight} // 🔥 useEffect 제거, onInput 이벤트로 높이 조절
+        className={clsx(
+          isEditing ? 'cursor-text' : 'cursor-pointer',
+          'w-full resize-none appearance-none overflow-hidden rounded-lg bg-neutral-100 p-2 text-black shadow-md drop-shadow-sm hover:shadow-lg focus:outline-none dark:bg-neutral-700 dark:text-white',
+        )}
+        rows={1}
+        readOnly={!isEditing}
+      />
       <div
-        className="relative flex items-start"
-        onMouseOver={handleMouseOver}
-        onMouseLeave={handleMouseLeave}>
-        <textarea
-          ref={inputRef}
-          defaultValue={task.title} // 🔥 useState 제거하고 직접 props 사용
-          onChange={e => handleInputChange(e.target.value)}
-          onKeyDown={handleKeyDown}
-          onInput={adjustTextareaHeight} // 🔥 useEffect 제거, onInput 이벤트로 높이 조절
-          className={clsx(
-            isEditing ? 'cursor-text' : 'cursor-pointer',
-            'w-full resize-none appearance-none overflow-hidden rounded-lg bg-neutral-100 p-2 text-black shadow-md drop-shadow-sm hover:shadow-lg focus:outline-none dark:bg-neutral-700 dark:text-white',
-          )}
-          rows={1}
-          readOnly={!isEditing}
-        />
-        <div
-          ref={buttonContainerRef}
-          className="absolute right-0 top-0 z-10 hidden">
-          <div className="flex w-fit flex-row p-1">
-            <button
-              onPointerDown={e => e.stopPropagation()}
-              className="flex w-full cursor-pointer items-center rounded-sm py-1 text-left text-white transition-colors hover:bg-indigo-300 dark:hover:bg-neutral-800"
-              onClick={handleEdit}>
-              <span className="material-symbols-outlined text-indigo-400">
-                edit
-              </span>
-            </button>
-            <button
-              onPointerDown={e => e.stopPropagation()}
-              className="flex w-full items-center rounded-sm py-1 text-left text-red-400 transition-colors hover:bg-indigo-300 dark:hover:bg-neutral-800"
-              onClick={() => deleteTask(task.id)}>
-              <span className="material-symbols-outlined">delete</span>
-            </button>
-          </div>
+        ref={buttonContainerRef}
+        className="absolute right-0 top-0 z-10 hidden">
+        <div className="flex w-fit flex-row p-1">
+          <button
+            onPointerDown={e => e.stopPropagation()}
+            className="flex w-full cursor-pointer items-center rounded-sm py-1 text-left text-white transition-colors hover:bg-indigo-300 dark:hover:bg-neutral-800"
+            onClick={handleEdit}>
+            <span className="material-symbols-outlined text-indigo-400">
+              edit
+            </span>
+          </button>
+          <button
+            onPointerDown={e => e.stopPropagation()}
+            className="flex w-full items-center rounded-sm py-1 text-left text-red-400 transition-colors hover:bg-indigo-300 dark:hover:bg-neutral-800"
+            onClick={() => deleteTask(task.id)}>
+            <span className="material-symbols-outlined">delete</span>
+          </button>
         </div>
       </div>
     </div>
   )
 })
 
-export default Task
+export default TaskTest
