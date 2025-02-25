@@ -33,6 +33,12 @@ export async function getBoards() {
         order: task.order,
       })),
     }))
+    convertedBoards.sort((a, b) => a.order - b.order)
+    convertedBoards.forEach(board => {
+      if (board.tasks) {
+        board.tasks.sort((a, b) => a.order - b.order)
+      }
+    })
     return convertedBoards
   } catch (error) {
     console.error('Error fetching boards:', error)

@@ -24,7 +24,7 @@ import {
   SortableContext,
 } from '@dnd-kit/sortable'
 import Board from './Board'
-import Task from './Task'
+import TaskTest from './TaskTest'
 import AddBoardButton from '../ui/AddBoardButton'
 import AddTaskButton from '../ui/AddTaskButton'
 import TaskContainer from './TaskContainer'
@@ -45,9 +45,9 @@ export default function BoardListTest({ boards }: { boards: BoardType[] }) {
   }, [boards])
   const sensors = useSensors(useSensor(PointerSensor))
   const boardListRef = useRef(boardList)
-  // useEffect(() => {
-  //   boardListRef.current = boardList
-  // }, [boardList])
+  useEffect(() => {
+    boardListRef.current = boardList
+  }, [boardList])
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event
@@ -311,7 +311,7 @@ export default function BoardListTest({ boards }: { boards: BoardType[] }) {
                 <div className="group space-y-3 rounded-lg bg-transparent p-3">
                   {(board.tasks || []).map(task => (
                     <TaskContainer key={task.id} id={task.id}>
-                      <Task
+                      <TaskTest
                         task={task}
                         autoFocus={task.id === newTaskId}
                         onChange={handleTaskChange}
@@ -333,7 +333,7 @@ export default function BoardListTest({ boards }: { boards: BoardType[] }) {
       <DragOverlay>
         {draggingTask && (
           <TaskContainer id={draggingTask.id}>
-            <Task task={draggingTask} onChange={handleTaskChange} />
+            <TaskTest task={draggingTask} onChange={handleTaskChange} />
           </TaskContainer>
         )}
       </DragOverlay>

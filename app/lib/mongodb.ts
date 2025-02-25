@@ -2,11 +2,10 @@
 /* eslint-disable no-var */
 import mongoose from 'mongoose'
 
-let MONGODB_URI = ''
-MONGODB_URI =
+const MONGODB_URI =
   process.env.NODE_ENV !== 'production'
-    ? process.env.MONGODB_URI_LOCAL!
-    : process.env.MONGODB_URI!
+    ? process.env.MONGODB_URI_LOCAL
+    : process.env.MONGODB_URI
 
 if (!MONGODB_URI) {
   throw new Error('MONGODB_URI is not defined')
@@ -35,9 +34,17 @@ const connectDB = async () => {
     cached.promise = mongoose.connect(MONGODB_URI, options)
   }
 
-  cached.conn = await cached.promise
-  console.log('MongoDB Connected (Cached)')
+  try {
+    cached.conn = await cached.promise
+    console.log('✅ MongoDB Connected (Cached)')
+  } catch (err) {
+    console.error('❌ MongoDB Connection Failed:')
+    console.error(err instanceof Error ? err.message : err)
+    console.error(err instanceof Error ? err.stack : err)
+    cached.promise = null // 실패 시 재시도를 위해 초기화
+    throw err // 오류를 호출한 곳으로 전달
+  }
+
   return cached.conn
 }
-
 export default connectDB
