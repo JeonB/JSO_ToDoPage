@@ -36,13 +36,11 @@ export default function BoardListTest({ boards }: { boards: BoardType[] }) {
   const [newBoardId, setNewBoardId] = useState<string | null>(null)
 
   useEffect(() => {
-    setBoardList(prevBoards => {
-      if (JSON.stringify(prevBoards) === JSON.stringify(boards)) {
-        return prevBoards
-      }
-      return boards
-    })
+    if (boards !== boardListRef.current) {
+      setBoardList(boards)
+    }
   }, [boards])
+
   const sensors = useSensors(useSensor(PointerSensor))
   const boardListRef = useRef(boardList)
   useEffect(() => {
@@ -270,17 +268,29 @@ export default function BoardListTest({ boards }: { boards: BoardType[] }) {
 
   const handleTaskChange = (taskId: string, newTitle: string) => {
     setBoardList(prevBoards =>
-      prevBoards.map(board => ({
-        ...board,
-        tasks: board.tasks?.map(task =>
-          task.id === taskId ? { ...task, title: newTitle } : task,
-        ),
-      })),
+      prevBoards.map(board => {
+        const updatedTasks = board.tasks?.map(task =>
+          task.id === taskId && task.title !== newTitle
+            ? { ...task, title: newTitle }
+            : task,
+        )
+
+        return updatedTasks === board.tasks
+          ? board
+          : { ...board, tasks: updatedTasks }
+      }),
     )
   }
 
-  const handleTaskCreated = (taskId: string) => {
-    setNewTaskId(taskId)
+  const handleTaskCreated = (boardId: string, newTask: TaskType) => {
+    setBoardList(prevBoards =>
+      prevBoards.map(board =>
+        board.id === boardId
+          ? { ...board, tasks: [...(board.tasks || []), newTask] }
+          : board,
+      ),
+    )
+    setNewTaskId(newTask.id)
   }
 
   const handleBoardCreated = (boardId: string) => {

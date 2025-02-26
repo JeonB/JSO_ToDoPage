@@ -32,9 +32,12 @@ export async function createTask(boardId: string) {
     await Board.findByIdAndUpdate(parsedBoardId, {
       $push: { tasks: newTask._id },
     })
-
-    revalidatePath('/')
-    return newTask._id.toString()
+    const convertedTask: TaskType = {
+      id: newTask._id.toString(),
+      title: newTask.title,
+      order: newTask.order,
+    }
+    return convertedTask
   } catch (error) {
     console.log('데이터베이스 에러: ', error)
     throw new Error('할일 생성 실패')

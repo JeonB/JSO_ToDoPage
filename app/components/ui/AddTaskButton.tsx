@@ -1,18 +1,31 @@
 import { createTask } from '@/app/lib/actions'
+import { TaskType } from '@/app/lib/type'
+import { useCallback, useState } from 'react'
 
 export default function AddTaskButton({
   id,
   onTaskCreated,
 }: {
   id: string
-  onTaskCreated: (taskId: string) => void
+  onTaskCreated: (boardId: string, newTask: TaskType) => void
 }) {
-  const handleAddTask = async () => {
-    const newTask_id = await createTask(id)
-    if (newTask_id) {
-      onTaskCreated(newTask_id)
+  const [isLoading, setIsLoading] = useState(false)
+
+  const handleAddTask = useCallback(async () => {
+    if (isLoading) return
+    setIsLoading(true)
+
+    try {
+      const newTask = await createTask(id)
+      if (newTask) {
+        onTaskCreated(id, newTask)
+      }
+    } catch (error) {
+      console.error('Task 추가 실패:', error)
+    } finally {
+      setIsLoading(false)
     }
-  }
+  }, [id, isLoading, onTaskCreated])
   return (
     <button
       onClick={handleAddTask}
