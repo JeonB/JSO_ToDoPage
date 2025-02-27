@@ -73,14 +73,15 @@ function Board({ id, title, order, children, autoFocus }: BoardType) {
       style={style}
       {...attributes}
       {...listeners}
-      className={clsx(isDragging && 'opacity-50')}>
-      <div className="w-full flex-shrink-0 rounded-xl border bg-neutral-100 p-4 text-black shadow-sm md:w-[300px] lg:w-[350px] dark:border-neutral-700 dark:bg-neutral-800 dark:text-white">
+      className={clsx(isDragging && 'opacity-50', 'touch-none')}>
+      <div className="w-full flex-shrink-0 touch-none rounded-xl border bg-neutral-100 p-4 text-black shadow-sm dark:border-neutral-700 dark:bg-neutral-800 dark:text-white md:w-[300px] lg:w-[350px]">
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="material-symbols-outlined text-blue-400">
               format_list_bulleted
             </span>
             <input
+              data-no-dnd={isEditing ? 'true' : undefined}
               ref={inputRef}
               className={clsx(
                 'w-full',
@@ -99,7 +100,7 @@ function Board({ id, title, order, children, autoFocus }: BoardType) {
               onChange={handleNameChange}
               placeholder="보드 제목 입력"
               readOnly={!isEditing}
-              onMouseDown={handleMouseDown}
+              // onMouseDown={handleMouseDown}
               onBlur={handleBlur}
             />
           </div>

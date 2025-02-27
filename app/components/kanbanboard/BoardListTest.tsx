@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useRef } from 'react'
+import { useState, TouchEvent, PointerEvent } from 'react'
 import { BoardType, TaskType } from '@/app/lib/type'
 import {
   updateBoardOrder,
@@ -11,7 +11,9 @@ import {
   DndContext,
   DragEndEvent,
   DragStartEvent,
+  MouseSensor,
   PointerSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   DragOverlay,
@@ -28,24 +30,45 @@ import TaskTest from './TaskTest'
 import AddBoardButton from '../ui/AddBoardButton'
 import AddTaskButton from '../ui/AddTaskButton'
 import TaskContainer from './TaskContainer'
+import useBoardList from '@/app/hooks/useBoardList'
 
 export default function BoardListTest({ boards }: { boards: BoardType[] }) {
-  const [boardList, setBoardList] = useState<BoardType[]>([])
   const [draggingTask, setDraggingTask] = useState<TaskType | null>(null)
   const [newTaskId, setNewTaskId] = useState<string | null>(null)
   const [newBoardId, setNewBoardId] = useState<string | null>(null)
+  const { boardList, setBoardList, boardListRef } = useBoardList(boards)
+  const [draggingBoard, setDraggingBoard] = useState<BoardType | null>(null)
 
-  useEffect(() => {
-    if (boards !== boardListRef.current) {
-      setBoardList(boards)
+  const customHandleEvent = (element: HTMLElement | null) => {
+    let cur = element
+
+    while (cur) {
+      if (cur.dataset.noDnd) {
+        return false
+      }
+      cur = cur.parentElement
     }
-  }, [boards])
 
-  const sensors = useSensors(useSensor(PointerSensor))
-  const boardListRef = useRef(boardList)
-  useEffect(() => {
-    boardListRef.current = boardList
-  }, [boardList])
+    return true
+  }
+
+  PointerSensor.activators = [
+    {
+      eventName: 'onPointerDown',
+      handler: ({ nativeEvent: event }: PointerEvent) =>
+        customHandleEvent(event.target as HTMLElement),
+    },
+  ]
+
+  TouchSensor.activators = [
+    {
+      eventName: 'onTouchStart',
+      handler: ({ nativeEvent: event }: TouchEvent) =>
+        customHandleEvent(event.target as HTMLElement),
+    },
+  ]
+
+  const sensors = useSensors(useSensor(PointerSensor), useSensor(TouchSensor))
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event
@@ -58,12 +81,19 @@ export default function BoardListTest({ boards }: { boards: BoardType[] }) {
     if (task) {
       setDraggingTask(task)
     }
+
+    const board = boardList.find(board => board.id === activeId)
+    if (board) {
+      setDraggingBoard(board)
+    }
   }
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event
+    setDraggingTask(null)
+    setDraggingBoard(null)
+
     if (!over || active.id === over.id) {
-      setDraggingTask(null)
       return
     }
 
@@ -316,18 +346,23 @@ export default function BoardListTest({ boards }: { boards: BoardType[] }) {
               order={board.order}
               autoFocus={board.id === newBoardId}>
               <SortableContext
-                items={(board.tasks || []).map(task => task.id)}
+                items={
+                  board.tasks
+                    ? board.tasks.map(task => task.id)
+                    : [`empty-${board.id}`]
+                }
                 strategy={verticalListSortingStrategy}>
                 <div className="group space-y-3 rounded-lg bg-transparent p-3">
-                  {(board.tasks || []).map(task => (
-                    <TaskContainer key={task.id} id={task.id}>
-                      <TaskTest
-                        task={task}
-                        autoFocus={task.id === newTaskId}
-                        onChange={handleTaskChange}
-                      />
-                    </TaskContainer>
-                  ))}
+                  {board.tasks &&
+                    board.tasks.map(task => (
+                      <TaskContainer key={task.id} id={task.id}>
+                        <TaskTest
+                          task={task}
+                          autoFocus={task.id === newTaskId}
+                          onChange={handleTaskChange}
+                        />
+                      </TaskContainer>
+                    ))}
                 </div>
                 <AddTaskButton
                   id={board.id}
@@ -345,6 +380,32 @@ export default function BoardListTest({ boards }: { boards: BoardType[] }) {
           <TaskContainer id={draggingTask.id}>
             <TaskTest task={draggingTask} onChange={handleTaskChange} />
           </TaskContainer>
+        )}
+        {draggingBoard && (
+          <Board
+            id={draggingBoard.id}
+            title={draggingBoard.title}
+            order={draggingBoard.order}>
+            <SortableContext
+              items={(draggingBoard.tasks || []).map(task => task.id)}
+              strategy={verticalListSortingStrategy}>
+              <div className="group space-y-3 rounded-lg bg-transparent p-3">
+                {draggingBoard.tasks ? (
+                  draggingBoard.tasks.map(task => (
+                    <TaskContainer key={task.id} id={task.id}>
+                      <TaskTest task={task} onChange={handleTaskChange} />
+                    </TaskContainer>
+                  ))
+                ) : (
+                  <div>no tasks</div>
+                )}
+              </div>
+              <AddTaskButton
+                id={draggingBoard.id}
+                onTaskCreated={handleTaskCreated}
+              />
+            </SortableContext>
+          </Board>
         )}
       </DragOverlay>
     </DndContext>

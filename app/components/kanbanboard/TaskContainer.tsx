@@ -22,7 +22,6 @@ const TaskContainer = memo(function TaskContainer({
     ? { transform: `translate(${transform.x}px, ${transform.y}px)`, transition }
     : undefined
 
-  // 🔥 기존 props를 유지하면서 isDragging을 추가하여 Task에 전달
   const clonedChild = useMemo(
     () =>
       cloneElement(children, {

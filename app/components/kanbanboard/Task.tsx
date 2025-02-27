@@ -1,11 +1,11 @@
-import { memo, useCallback, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { TaskType } from '@/app/lib/type'
 import { useDebouncedCallback } from 'use-debounce'
 import { updateTaskTitle, deleteTask } from '@/app/lib/actions'
 import clsx from 'clsx'
 import { useSortable } from '@dnd-kit/sortable'
 
-const Task = memo(function Task({
+export default function Task({
   task,
   onChange,
   autoFocus = false,
@@ -14,23 +14,17 @@ const Task = memo(function Task({
   onChange: (taskId: string, newTitle: string) => void
   autoFocus?: boolean
 }) {
-  console.log('Task render:', task.id, 'autoFocus:', autoFocus)
+  const [taskTitle, setTaskTitle] = useState<string>(task.title || '')
+  const [isEditing, setIsEditing] = useState(autoFocus)
+  const [isFocused, setIsFocused] = useState(autoFocus)
 
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const buttonContainerRef = useRef<HTMLDivElement>(null)
-  const [isEditing, setIsEditing] = useState(autoFocus)
+  const isHoveredRef = useRef(false)
 
-  // 🔥 autoFocus 처리: 처음 렌더링될 때만 적용
-  useEffect(() => {
-    if (autoFocus) {
-      setTimeout(() => inputRef.current?.focus(), 0)
-    }
-  }, [autoFocus])
-
-  // 🔥 Debounce API 호출 최적화
   const debouncedUpdate = useDebouncedCallback(
     async (taskId: string, newTitle: string) => {
-      if (newTitle.trim()) {
+      if (newTitle.trim() && newTitle) {
         await updateTaskTitle({
           id: taskId,
           title: newTitle,
@@ -41,63 +35,79 @@ const Task = memo(function Task({
     500,
   )
 
-  // 🔥 handleInputChange 최적화
-  const handleInputChange = useCallback(
-    (newTitle: string) => {
-      onChange(task.id, newTitle)
-      debouncedUpdate(task.id, newTitle)
-    },
-    [task.id, debouncedUpdate, onChange],
-  )
+  const handleInputChange = (newTitle: string) => {
+    setTaskTitle(newTitle)
+    onChange(task.id, newTitle)
+    debouncedUpdate(task.id, newTitle)
+  }
 
-  // 🔥 Enter 키 처리
-  const handleKeyDown = useCallback(
-    async (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault()
-        const updatedTitle = task.title?.trim()
+  const handleKeyDown = async (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      const updatedTitle = taskTitle.trim()
 
-        if (updatedTitle) {
-          setIsEditing(false)
-          await updateTaskTitle({
-            id: task.id,
-            title: updatedTitle,
-            order: task.order,
-          })
-        }
+      if (updatedTitle) {
+        setTaskTitle(updatedTitle)
+        onChange(task.id, updatedTitle)
+        setIsEditing(false)
+
+        await updateTaskTitle({
+          id: task.id,
+          title: updatedTitle,
+          order: task.order,
+        })
       }
-    },
-    [task],
-  )
+    }
+  }
 
-  // 🔥 textarea 자동 높이 조절
-  const adjustTextareaHeight = useCallback(() => {
+  const adjustTextareaHeight = () => {
     if (inputRef.current) {
       inputRef.current.style.height = 'auto'
       inputRef.current.style.height = `${inputRef.current.scrollHeight}px`
     }
-  }, [])
+  }
 
-  // 🔥 수정 버튼 클릭 시 편집 모드 활성화
-  const handleEdit = useCallback(() => {
-    setIsEditing(true)
-    setTimeout(() => inputRef.current?.focus(), 0)
-  }, [])
+  useEffect(() => {
+    adjustTextareaHeight()
+  }, [taskTitle])
 
-  // 🔥 버튼 컨테이너 보이기/숨기기
+  useEffect(() => {
+    if (isEditing && inputRef.current) {
+      inputRef.current.focus()
+      adjustTextareaHeight()
+    }
+  }, [isEditing])
+
+  useEffect(() => {
+    if (isFocused && inputRef.current) {
+      inputRef.current.focus()
+      setIsFocused(false)
+    }
+  }, [isFocused])
+
+  useEffect(() => {
+    setTaskTitle(task.title || '')
+  }, [task.title])
+
   const handleMouseOver = () => {
-    if (buttonContainerRef.current) {
+    if (!isHoveredRef.current && buttonContainerRef.current) {
+      isHoveredRef.current = true
       buttonContainerRef.current.style.display = 'flex'
     }
   }
 
   const handleMouseLeave = () => {
-    if (buttonContainerRef.current) {
+    if (isHoveredRef.current && buttonContainerRef.current) {
+      isHoveredRef.current = false
       buttonContainerRef.current.style.display = 'none'
     }
   }
 
-  // 🔥 DnD 관련 속성
+  const handleEdit = () => {
+    setIsEditing(false)
+    setTimeout(() => setIsEditing(true), 100)
+  }
+
   const {
     attributes,
     listeners,
@@ -108,8 +118,29 @@ const Task = memo(function Task({
   } = useSortable({ id: task.id })
 
   const style = transform
-    ? { transform: `translate(${transform.x}px, ${transform.y}px)`, transition }
+    ? {
+        transform: `translate(${transform.x}px, ${transform.y}px)`,
+        transition,
+      }
     : undefined
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (inputRef.current && !inputRef.current.contains(e.target as Node)) {
+        setIsEditing(false)
+      }
+    }
+
+    if (isEditing) {
+      document.addEventListener('mousedown', handleClickOutside)
+    } else {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isEditing])
 
   return (
     <div
@@ -124,13 +155,25 @@ const Task = memo(function Task({
         onMouseLeave={handleMouseLeave}>
         <textarea
           ref={inputRef}
-          defaultValue={task.title} // 🔥 useState 제거하고 직접 props 사용
+          value={taskTitle}
           onChange={e => handleInputChange(e.target.value)}
           onKeyDown={handleKeyDown}
-          onInput={adjustTextareaHeight} // 🔥 useEffect 제거, onInput 이벤트로 높이 조절
           className={clsx(
             isEditing ? 'cursor-text' : 'cursor-pointer',
-            'w-full resize-none appearance-none overflow-hidden rounded-lg bg-neutral-100 p-2 text-black shadow-md drop-shadow-sm hover:shadow-lg focus:outline-none dark:bg-neutral-700 dark:text-white',
+            'w-full',
+            'resize-none',
+            'appearance-none',
+            'overflow-hidden',
+            'rounded-lg',
+            'dark:bg-neutral-700',
+            'bg-neutral-100',
+            'shadow-md',
+            'p-2',
+            'dark:text-white',
+            'text-black',
+            'hover:shadow-lg',
+            'drop-shadow-sm',
+            'focus:outline-none',
           )}
           rows={1}
           readOnly={!isEditing}
@@ -158,6 +201,4 @@ const Task = memo(function Task({
       </div>
     </div>
   )
-})
-
-export default Task
+}
