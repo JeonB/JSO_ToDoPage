@@ -3,7 +3,6 @@ import { TaskType } from '@/app/lib/type'
 import { deleteTask } from '@/app/lib/actions'
 import clsx from 'clsx'
 import useTaskInput from '@/app/hooks/useTaskInput'
-import useClickOutside from '@/app/hooks/useClickOutside'
 const TaskTest = memo(
   function Task({
     task,
@@ -25,8 +24,6 @@ const TaskTest = memo(
       handleKeyDown,
       handleEdit,
     } = useTaskInput(task, onChange)
-
-    // useClickOutside(inputRef, () => setIsEditing(false), isEditing)
 
     return (
       <div
