@@ -74,7 +74,7 @@ function Board({ id, title, order, children, autoFocus }: BoardType) {
       {...attributes}
       {...listeners}
       className={clsx(isDragging && 'opacity-50', 'touch-none')}>
-      <div className="w-full flex-shrink-0 touch-none rounded-xl border bg-neutral-100 p-4 text-black shadow-sm dark:border-neutral-700 dark:bg-neutral-800 dark:text-white md:w-[300px] lg:w-[350px]">
+      <div className="w-full flex-shrink-0 rounded-xl border bg-neutral-100 p-4 text-black shadow-sm dark:border-neutral-700 dark:bg-neutral-800 dark:text-white md:w-[300px] lg:w-[350px]">
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="material-symbols-outlined text-blue-400">
