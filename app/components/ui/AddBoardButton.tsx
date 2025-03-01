@@ -1,14 +1,14 @@
 import { createBoard } from '@/app/lib/actions'
 
 export default function AddBoardButton({
-  onBoardCreated,
+  setNewBoardId,
 }: {
-  onBoardCreated: (boardId: string) => void
+  setNewBoardId: (boardId: string) => void
 }) {
   const handleAddBoard = async () => {
     try {
       const newBoard_id = await createBoard()
-      onBoardCreated(newBoard_id)
+      setNewBoardId(newBoard_id)
     } catch (error) {
       console.error('보드 추가 실패:', error)
     }

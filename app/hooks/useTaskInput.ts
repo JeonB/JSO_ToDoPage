@@ -3,10 +3,7 @@ import { useDebouncedCallback } from 'use-debounce'
 import { updateTaskTitle } from '@/app/lib/actions'
 import { TaskType } from '@/app/lib/type'
 
-export default function useTaskInput(
-  task: TaskType,
-  onChange: (taskId: string, newTitle: string) => void,
-) {
+export default function useTaskInput(task: TaskType) {
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const localTitleRef = useRef(task.title)
   const [isEditing, setIsEditing] = useState(false)
@@ -35,13 +32,6 @@ export default function useTaskInput(
     500,
   )
 
-  const debouncedUpdateFrontend = useDebouncedCallback(
-    (taskId: string, newTitle: string) => {
-      onChange(taskId, newTitle)
-    },
-    3000,
-  )
-
   const handleInputChange = (newTitle: string) => {
     localTitleRef.current = newTitle
     if (inputRef.current) {
@@ -49,7 +39,6 @@ export default function useTaskInput(
       adjustTextareaHeight()
     }
     debouncedUpdateBackend(task.id, newTitle)
-    debouncedUpdateFrontend(task.id, newTitle)
   }
 
   const handleKeyDown = async (e: React.KeyboardEvent<HTMLTextAreaElement>) => {

@@ -20,7 +20,7 @@ function Board({ id, title, order, children, autoFocus }: BoardType) {
         order: order,
       })
     }
-  }, 500)
+  }, 300)
 
   useEffect(() => {
     if (isEditing && inputRef.current) {
@@ -38,16 +38,6 @@ function Board({ id, title, order, children, autoFocus }: BoardType) {
     setIsEditing(true)
     if (inputRef.current) {
       inputRef.current.focus()
-    }
-  }
-
-  const handleBlur = () => {
-    setIsEditing(false)
-  }
-
-  const handleMouseDown = (e: React.MouseEvent<HTMLInputElement>) => {
-    if (!isEditing) {
-      e.preventDefault()
     }
   }
 
@@ -100,8 +90,7 @@ function Board({ id, title, order, children, autoFocus }: BoardType) {
               onChange={handleNameChange}
               placeholder="보드 제목 입력"
               readOnly={!isEditing}
-              // onMouseDown={handleMouseDown}
-              onBlur={handleBlur}
+              onBlur={() => setIsEditing(false)}
             />
           </div>
           <DetailsMenu

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useRef } from 'react'
 import { DetailsMenuProps } from '@/app/lib/type'
 
 const DetailsMenu = ({
@@ -8,44 +8,28 @@ const DetailsMenu = ({
   onDelete,
 }: DetailsMenuProps) => {
   const [isOpen, setIsOpen] = useState(false)
-  const detailsRef = useRef<HTMLDivElement>(null)
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-  const handleToggle = () => {
-    setIsOpen(!isOpen)
-  }
-
-  const handleClickOutside = (event: MouseEvent) => {
-    if (
-      detailsRef.current &&
-      !detailsRef.current.contains(event.target as Node)
-    ) {
+  const handleBlur = () => {
+    timeoutRef.current = setTimeout(() => {
       setIsOpen(false)
-    }
+    }, 100)
   }
 
-  useEffect(() => {
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
+  const handlePointerDown = (e: React.PointerEvent<HTMLButtonElement>) => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current)
     }
-  }, [])
-
-  const handleEdit = () => {
-    onEdit()
-    setIsOpen(false)
-  }
-
-  const handleDelete = () => {
-    onDelete()
-    setIsOpen(false)
+    e.stopPropagation()
   }
 
   return (
-    <div ref={detailsRef} className="relative">
+    <div className="relative">
       <button
-        onPointerDown={e => e.stopPropagation()}
+        onBlur={handleBlur}
+        onPointerDown={handlePointerDown}
         className="cursor-pointer list-none rounded-lg p-2 transition-colors hover:bg-indigo-100 dark:hover:bg-neutral-700"
-        onClick={handleToggle}>
+        onClick={() => setIsOpen(!isOpen)}>
         <span className="material-symbols-outlined text-neutral-400">
           more_vert
         </span>
@@ -53,18 +37,18 @@ const DetailsMenu = ({
       {isOpen && (
         <div className="absolute right-0 z-50 mt-2 w-32 rounded-lg border border-neutral-300 bg-white py-2 shadow-lg dark:border-neutral-700 dark:bg-neutral-800">
           <button
-            onPointerDown={e => e.stopPropagation()}
+            onPointerDown={handlePointerDown}
             className="flex w-full items-center gap-2 px-2 py-2 text-indigo-400 transition-colors hover:bg-indigo-100 dark:hover:bg-neutral-700"
-            onClick={handleEdit}>
+            onClick={onEdit}>
             <span className="material-symbols-outlined text-indigo-400">
               edit
             </span>
             {editLabel}
           </button>
           <button
-            onPointerDown={e => e.stopPropagation()}
+            onPointerDown={handlePointerDown}
             className="flex w-full items-center gap-2 px-2 py-2 text-red-400 transition-colors hover:bg-indigo-100 dark:hover:bg-neutral-700"
-            onClick={handleDelete}>
+            onClick={onDelete}>
             <span className="material-symbols-outlined">delete</span>
             {deleteLabel}
           </button>

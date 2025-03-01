@@ -1,5 +1,4 @@
 import { create } from 'zustand'
-import { createJSONStorage, persist } from 'zustand/middleware'
 import { BoardType } from '../lib/type'
 
 // 상태 변경 감지 함수 (깊은 비교)
@@ -27,33 +26,24 @@ interface BoardStore {
   updateBoard: (boardId: string, newBoard: Partial<BoardType>) => void
 }
 
-// Zustand `persist`를 적용하여 상태 유지
-export const useBoardStore = create<BoardStore>()(
-  persist(
-    (set, get) => ({
-      boardList: [],
+export const useBoardStore = create<BoardStore>()((set, get) => ({
+  boardList: [],
 
-      setBoardList: boards => {
-        const prevBoards = get().boardList
-        if (!prevBoards.length) {
-          // 초기 상태 설정 (최초 1회만 실행)
-          set({ boardList: boards })
-        } else if (!areBoardsEqual(prevBoards, boards)) {
-          // 기존 상태와 다를 때만 업데이트
-          set({ boardList: boards })
-        }
-      },
+  setBoardList: boards => {
+    const prevBoards = get().boardList
+    if (!prevBoards.length) {
+      // 초기 상태 설정 (최초 1회만 실행)
+      set({ boardList: boards })
+    } else if (!areBoardsEqual(prevBoards, boards)) {
+      // 기존 상태와 다를 때만 업데이트
+      set({ boardList: boards })
+    }
+  },
 
-      updateBoard: (boardId, updateBoard) =>
-        set(state => ({
-          boardList: state.boardList.map(board =>
-            board.id === boardId ? { ...board, ...updateBoard } : board,
-          ),
-        })),
-    }),
-    {
-      name: 'kanban-board-storage', // 저장될 키 이름
-      storage: createJSONStorage(() => localStorage), // localStorage에 저장
-    },
-  ),
-)
+  updateBoard: (boardId, updateBoard) =>
+    set(state => ({
+      boardList: state.boardList.map(board =>
+        board.id === boardId ? { ...board, ...updateBoard } : board,
+      ),
+    })),
+}))

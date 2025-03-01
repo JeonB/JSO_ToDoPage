@@ -1,19 +1,12 @@
-import {
-  DragEndEvent,
-  DragOverEvent,
-  DragStartEvent,
-  useSensor,
-  useSensors,
-} from '@dnd-kit/core'
+import { DragEndEvent, DragOverEvent, DragStartEvent } from '@dnd-kit/core'
 import { useBoardStore } from '../store/useBoardStore'
-import useCustomSensors from './useCustomSensors'
 import { arrayMove } from '@dnd-kit/sortable'
 import {
   updateBoardOrder,
   updateTaskOrder,
   updateTaskBoard,
 } from '../lib/actions'
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import { TaskType, BoardType } from '../lib/type'
 import { useDebouncedCallback } from 'use-debounce'
 

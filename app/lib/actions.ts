@@ -37,6 +37,7 @@ export async function createTask(boardId: string) {
       title: newTask.title,
       order: newTask.order,
     }
+    revalidatePath('/')
     return convertedTask
   } catch (error) {
     console.log('데이터베이스 에러: ', error)
@@ -109,6 +110,7 @@ export async function updateBoardTitle(data: BoardType) {
     if (!updatedBoard) {
       return { error: 'Board not found' }
     }
+    revalidatePath('/')
   } catch (error) {
     console.log('데이터베이스 에러: ', error)
     throw new Error('보드 수정 실패')
@@ -132,6 +134,7 @@ export async function deleteBoard(id: string) {
     if (!deletedBoard) {
       return { error: 'Board not found' }
     }
+    revalidatePath('/')
   } catch (error) {
     console.log('데이터베이스 에러: ', error)
     throw new Error('보드 삭제 실패')
@@ -143,6 +146,7 @@ export async function updateBoardOrder(boardId: string, newOrder: number) {
   try {
     await connectDB()
     await Board.findByIdAndUpdate(boardId, { order: newOrder })
+    revalidatePath('/')
   } catch (error) {
     console.error('Error updating board order:', error)
     throw new Error('Failed to update board order')
@@ -161,6 +165,7 @@ export async function updateTaskOrder(taskId: string, newOrder: number) {
     await Task.findByIdAndUpdate(parsedData.taskId, {
       order: parsedData.newOrder,
     })
+    revalidatePath('/')
   } catch (error) {
     console.error('Error updating task order:', error)
     throw new Error('Failed to update task order')
@@ -190,6 +195,7 @@ export async function updateTaskBoard(
     await Board.findByIdAndUpdate(parsedData.toBoardId, {
       $push: { tasks: parsedData.taskId },
     })
+    revalidatePath('/')
   } catch (error) {
     console.error('Error updating task board:', error)
     throw new Error('Failed to update task board')
