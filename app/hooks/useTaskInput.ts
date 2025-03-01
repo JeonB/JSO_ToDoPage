@@ -19,7 +19,7 @@ export default function useTaskInput(task: TaskType) {
     adjustTextareaHeight()
   }, [task.title, adjustTextareaHeight])
 
-  const debouncedUpdateBackend = useDebouncedCallback(
+  const debouncedUpdate = useDebouncedCallback(
     async (taskId: string, newTitle: string) => {
       if (newTitle.trim() && newTitle !== task.title) {
         await updateTaskTitle({
@@ -38,7 +38,7 @@ export default function useTaskInput(task: TaskType) {
       inputRef.current.value = newTitle
       adjustTextareaHeight()
     }
-    debouncedUpdateBackend(task.id, newTitle)
+    debouncedUpdate(task.id, newTitle)
   }
 
   const handleKeyDown = async (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -52,6 +52,9 @@ export default function useTaskInput(task: TaskType) {
           title: updatedTitle,
           order: task.order,
         })
+        if (inputRef.current) {
+          inputRef.current.blur()
+        }
       }
     }
   }

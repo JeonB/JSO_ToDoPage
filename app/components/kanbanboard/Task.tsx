@@ -11,8 +11,6 @@ const Task = memo(
     task: TaskType
     autoFocus?: boolean
   }) {
-    console.log('Task render:', task.id, 'autoFocus:', autoFocus)
-
     const buttonContainerRef = useRef<HTMLDivElement>(null)
     const {
       inputRef,
