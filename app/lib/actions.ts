@@ -4,7 +4,7 @@ import { z } from 'zod'
 import connectDB from './mongodb'
 import { Task, Board } from './models'
 import { TaskType, BoardType } from './type'
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, revalidateTag } from 'next/cache'
 import { AnyBulkWriteOperation } from 'mongoose'
 
 const TaskSchema = z.object({
@@ -213,6 +213,7 @@ export async function updateBoardAndTasks(updatedBoards: BoardType[]) {
     if (bulkTaskOps.length > 0) {
       await Task.bulkWrite(bulkTaskOps)
     }
+    revalidateTag('boards')
   } catch (error) {
     console.error('Error updating boards and tasks:', error)
     throw new Error('Failed to update boards and tasks')
