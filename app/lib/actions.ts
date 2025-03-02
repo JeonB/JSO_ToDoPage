@@ -5,19 +5,19 @@ import connectDB from './mongodb'
 import { Task, Board } from './models'
 import { TaskType, BoardType } from './type'
 import { revalidatePath } from 'next/cache'
+import { AnyBulkWriteOperation } from 'mongoose'
 
 const TaskSchema = z.object({
-  id: z.string().optional(),
+  id: z.string(),
   title: z.string().optional(),
-  order: z.number().optional(),
-  boardId: z.string().optional(),
+  order: z.number(),
 })
 
 const BoardSchema = z.object({
-  id: z.string().optional(),
+  id: z.string(),
   title: z.string().optional(),
-  order: z.number().optional(),
-  tasks: z.array(z.string()).optional(),
+  order: z.number(),
+  tasks: z.array(TaskSchema).optional(),
 })
 
 export async function createTask(boardId: string) {
@@ -131,73 +131,90 @@ export async function deleteBoard(id: string) {
     await Task.deleteMany({ _id: { $in: taskIds } })
 
     const deletedBoard = await Board.findByIdAndDelete(parsedId)
+    revalidatePath('/')
     if (!deletedBoard) {
       return { error: 'Board not found' }
     }
-    revalidatePath('/')
   } catch (error) {
     console.log('데이터베이스 에러: ', error)
     throw new Error('보드 삭제 실패')
   }
-  revalidatePath('/')
 }
 
-export async function updateBoardOrder(boardId: string, newOrder: number) {
+export async function updateBoardAndTasks(updatedBoards: BoardType[]) {
   try {
     await connectDB()
-    await Board.findByIdAndUpdate(boardId, { order: newOrder })
-    revalidatePath('/')
-  } catch (error) {
-    console.error('Error updating board order:', error)
-    throw new Error('Failed to update board order')
-  }
-}
+    const validBoards = BoardSchema.array().parse(updatedBoards)
+    const boardIds = validBoards.map(board => board.id)
+    const existingBoards = await Board.find({ _id: { $in: boardIds } }).lean()
+    const validExistingBoards = BoardSchema.array().parse(
+      existingBoards.map(board => ({
+        id: board._id.toString(), // `_id`를 `id`로 변환
+        title: board.title,
+        order: board.order,
+        tasks: board.tasks?.map(task => ({
+          id: task.id.toString(), // `_id`를 `id`로 변환
+          title: task.title,
+          order: task.order ?? 0, // `order`가 undefined면 기본값 0
+        })),
+      })),
+    )
+    const bulkBoardOps: AnyBulkWriteOperation<BoardType>[] = []
+    const bulkTaskOps: AnyBulkWriteOperation<TaskType>[] = []
 
-export async function updateTaskOrder(taskId: string, newOrder: number) {
-  const parsedData = z
-    .object({
-      taskId: z.string(),
-      newOrder: z.number().min(0),
-    })
-    .parse({ taskId, newOrder })
-  try {
-    await connectDB()
-    await Task.findByIdAndUpdate(parsedData.taskId, {
-      order: parsedData.newOrder,
-    })
-    revalidatePath('/')
-  } catch (error) {
-    console.error('Error updating task order:', error)
-    throw new Error('Failed to update task order')
-  }
-}
+    validBoards.forEach(newBoard => {
+      const existingBoard = validExistingBoards.find(
+        board => board.id.toString() === newBoard.id,
+      )
+      if (!existingBoard) return
+      // Board가 변경되었는지 확인
+      if (
+        existingBoard.order !== newBoard.order ||
+        existingBoard.title !== newBoard.title
+      ) {
+        bulkBoardOps.push({
+          updateOne: {
+            filter: { _id: newBoard.id },
+            update: { title: newBoard.title, order: newBoard.order },
+          },
+        })
+      }
 
-export async function updateTaskBoard(
-  taskId: string,
-  fromBoardId: string,
-  toBoardId: string,
-) {
-  const parsedData = z
-    .object({
-      taskId: z.string(),
-      fromBoardId: z.string(),
-      toBoardId: z.string(),
-    })
-    .parse({ taskId, fromBoardId, toBoardId })
-  try {
-    await connectDB()
-    // 테스크를 기존 보드에서 제거
-    await Board.findByIdAndUpdate(parsedData.fromBoardId, {
-      $pull: { tasks: parsedData.taskId },
+      // Task 목록이 변경되었는지 확인
+      const existingTaskIds = existingBoard.tasks?.map(task => task.toString())
+      const newTaskIds = newBoard.tasks?.map(task => task.id)
+
+      if (JSON.stringify(existingTaskIds) !== JSON.stringify(newTaskIds)) {
+        bulkBoardOps.push({
+          updateOne: {
+            filter: { _id: newBoard.id },
+            update: { tasks: newTaskIds },
+          },
+        })
+      }
+
+      // Task 순서 변경 감지
+      newBoard.tasks?.forEach((task, index) => {
+        if (task.order !== index) {
+          bulkTaskOps.push({
+            updateOne: {
+              filter: { _id: task.id },
+              update: { order: index },
+            },
+          })
+        }
+      })
     })
 
-    // 테스크를 새로운 보드에 추가
-    await Board.findByIdAndUpdate(parsedData.toBoardId, {
-      $push: { tasks: parsedData.taskId },
-    })
-    revalidatePath('/')
+    // MongoDB bulkWrite를 활용한 일괄 업데이트
+    if (bulkBoardOps.length > 0) {
+      await Board.bulkWrite(bulkBoardOps)
+    }
+    if (bulkTaskOps.length > 0) {
+      await Task.bulkWrite(bulkTaskOps)
+    }
   } catch (error) {
-    console.error('Error updating task board:', error)
-    throw new Error('Failed to update task board')
+    console.error('Error updating boards and tasks:', error)
+    throw new Error('Failed to update boards and tasks')
   }
 }

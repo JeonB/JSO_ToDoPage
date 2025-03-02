@@ -2,9 +2,7 @@ export interface BoardType {
   id: string
   title?: string
   order: number
-  autoFocus?: boolean
   tasks?: TaskType[]
-  children?: React.ReactNode
 }
 
 export interface TaskType {
