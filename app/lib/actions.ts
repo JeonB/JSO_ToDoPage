@@ -4,7 +4,7 @@ import { z } from 'zod'
 import connectDB from './mongodb'
 import { Task, Board } from './models'
 import { TaskType, BoardType } from './type'
-import { revalidatePath, revalidateTag } from 'next/cache'
+import { revalidateTag } from 'next/cache'
 import { AnyBulkWriteOperation } from 'mongoose'
 
 const TaskSchema = z.object({
@@ -37,7 +37,7 @@ export async function createTask(boardId: string) {
       title: newTask.title,
       order: newTask.order,
     }
-    revalidatePath('/')
+    revalidateTag('boards')
     return convertedTask
   } catch (error) {
     console.log('데이터베이스 에러: ', error)
@@ -54,7 +54,7 @@ export async function updateTaskTitle(data: TaskType) {
       { title: parsedData.title },
       { new: true },
     )
-    revalidatePath('/')
+    revalidateTag('boards')
     if (!updatedTask) {
       return { error: 'Task not found' }
     }
@@ -76,7 +76,7 @@ export async function deleteTask(id: string) {
     console.log('데이터베이스 에러: ', error)
     throw new Error('할일 삭제 실패')
   }
-  revalidatePath('/')
+  revalidateTag('boards')
 }
 
 export async function createBoard() {
@@ -85,7 +85,7 @@ export async function createBoard() {
     await connectDB()
     const newBoard = new Board(data)
     await newBoard.save()
-    revalidatePath('/')
+    revalidateTag('boards')
     return newBoard._id.toString()
   } catch (error) {
     console.log('데이터베이스 에러: ', error)
@@ -110,7 +110,7 @@ export async function updateBoardTitle(data: BoardType) {
     if (!updatedBoard) {
       return { error: 'Board not found' }
     }
-    revalidatePath('/')
+    revalidateTag('boards')
   } catch (error) {
     console.log('데이터베이스 에러: ', error)
     throw new Error('보드 수정 실패')
@@ -131,7 +131,7 @@ export async function deleteBoard(id: string) {
     await Task.deleteMany({ _id: { $in: taskIds } })
 
     const deletedBoard = await Board.findByIdAndDelete(parsedId)
-    revalidatePath('/')
+    revalidateTag('boards')
     if (!deletedBoard) {
       return { error: 'Board not found' }
     }
@@ -149,13 +149,13 @@ export async function updateBoardAndTasks(updatedBoards: BoardType[]) {
     const existingBoards = await Board.find({ _id: { $in: boardIds } }).lean()
     const validExistingBoards = BoardSchema.array().parse(
       existingBoards.map(board => ({
-        id: board._id.toString(), // `_id`를 `id`로 변환
+        id: board._id.toString(),
         title: board.title,
         order: board.order,
         tasks: board.tasks?.map(task => ({
-          id: task.id.toString(), // `_id`를 `id`로 변환
+          id: task.id.toString(),
           title: task.title,
-          order: task.order ?? 0, // `order`가 undefined면 기본값 0
+          order: task.order ?? 0,
         })),
       })),
     )

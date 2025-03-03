@@ -11,8 +11,7 @@ export const getBoards = unstable_cache(
       const convertedBoards: BoardType[] = boards.map(board => ({
         id: board._id.toString(),
         title: board.title,
-        order: board.order,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        order: board.order, // eslint-disable-next-line @typescript-eslint/no-explicit-any
         tasks: board.tasks?.map((task: any) => ({
           id: task._id.toString(),
           title: task.title,
@@ -32,5 +31,5 @@ export const getBoards = unstable_cache(
     }
   },
   ['boards'],
-  { tags: ['boards'] },
+  { tags: ['boards'], revalidate: 60 },
 )
