@@ -23,7 +23,7 @@ const Task = memo(
 
     return (
       <div
-        className="relative flex touch-none items-start"
+        className="relative flex items-start"
         onMouseOver={() => (buttonContainerRef.current!.style.display = 'flex')}
         onMouseLeave={() =>
           (buttonContainerRef.current!.style.display = 'none')

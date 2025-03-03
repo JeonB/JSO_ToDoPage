@@ -40,7 +40,25 @@ export default function BoardList({ boards }: { boards: BoardType[] }) {
   } = useDragAndDrop()
 
   const { PointerSensor, TouchSensor } = useCustomSensors()
-  const sensors = useSensors(useSensor(PointerSensor), useSensor(TouchSensor))
+  const detectDeviceType = () => {
+    if (typeof navigator !== 'undefined') {
+      const userAgent = navigator.userAgent.toLowerCase()
+
+      // 모바일 User-Agent 체크
+      const isMobileUA =
+        /android|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(
+          userAgent,
+        )
+
+      return isMobileUA ? 'mobile' : 'desktop'
+    }
+
+    return 'desktop'
+  }
+  const deviceType = detectDeviceType()
+  const sensors = useSensors(
+    useSensor(deviceType === 'mobile' ? TouchSensor : PointerSensor),
+  )
   const memoizedSensors = useMemo(() => sensors, [sensors])
 
   return (
