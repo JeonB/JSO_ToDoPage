@@ -38,6 +38,7 @@ https://jso-to-do-page.vercel.app/
 ```
 📦 kanban-board
 ┣ 📂 app
+┃ ┣ 📂 hooks
 ┃ ┣ 📂 lib
 ┃ ┃ ┣ 📜 actions.ts                  # 데이터 처리 API
 ┃ ┃ ┣ 📜 data.ts                     # 데이터 호출 API
